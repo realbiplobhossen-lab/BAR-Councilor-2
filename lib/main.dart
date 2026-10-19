@@ -1,9 +1,13 @@
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-void main() => runApp(const BarPrepApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const BarPrepApp());
+}
 
 const navy = Color(0xFF07172E);
 const navy2 = Color(0xFF102B4E);
@@ -12,6 +16,13 @@ const green = Color(0xFF20B875);
 const red = Color(0xFFE74452);
 const purple = Color(0xFF7953F5);
 const blue = Color(0xFF2678F5);
+const orange = Color(0xFFFF851B);
+
+const years = [
+  2012, 2013, 2014, 2015, 2016,
+  2017, 2018, 2019, 2020, 2021,
+  2022, 2023, 2024, 2025, 2026
+];
 
 class MCQ {
   final int id;
@@ -30,121 +41,292 @@ class MCQ {
     this.difficulty = 'simple',
   });
 
-  factory MCQ.fromJson(Map<String, dynamic> j) => MCQ(
-    id: j['id'] as int,
-    question: j['question'] as String,
-    options: List<String>.from(j['options']),
-    answer: j['answer'] as int,
-    explanation: j['explanation'] ?? '',
-    difficulty: j['difficulty'] ?? 'simple',
-  );
+  factory MCQ.fromJson(Map<String, dynamic> j) {
+    final options = List<String>.from(j['options'] as List);
+
+    if (options.length != 4) {
+      throw const FormatException(
+        'প্রতিটি MCQ-তে ঠিক ৪টি অপশন থাকতে হবে।',
+      );
+    }
+
+    final answer = j['answer'];
+    if (answer is! int || answer < 0 || answer > 3) {
+      throw const FormatException(
+        'সঠিক উত্তর 0 থেকে 3-এর মধ্যে হতে হবে।',
+      );
+    }
+
+    return MCQ(
+      id: j['id'] as int,
+      question: j['question'] as String,
+      options: options,
+      answer: answer,
+      explanation: j['explanation'] as String? ?? '',
+      difficulty: j['difficulty'] as String? ?? 'simple',
+    );
+  }
 }
 
 class BarPrepApp extends StatelessWidget {
   const BarPrepApp({super.key});
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    debugShowCheckedModeBanner: false,
-    title: 'Biplob BAR Plan',
-    theme: ThemeData(
-      useMaterial3: true,
-      scaffoldBackgroundColor: navy,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: gold,
-        brightness: Brightness.dark,
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Biplob BAR Plan',
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: navy,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: gold,
+          brightness: Brightness.dark,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: navy,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
       ),
-      fontFamily: 'Roboto',
-    ),
-    home: const HomeScreen(),
-  );
+      home: const SplashScreen(),
+    );
+  }
 }
 
-// Demonstration questions only.
-// Replace these with real 2012 questions.
+// নমুনা প্রশ্ন: প্রকৃত ২০১২ সালের প্রশ্নপত্র নয়।
 const demoQuestions = <MCQ>[
-  MCQ(id: 1, question: 'বাংলাদেশের সর্বোচ্চ আইন কোনটি?',
+  MCQ(
+    id: 1,
+    question: 'বাংলাদেশের সর্বোচ্চ আইন কোনটি?',
     options: ['দণ্ডবিধি', 'সংবিধান', 'দেওয়ানি কার্যবিধি', 'সাক্ষ্য আইন'],
-    answer: 1, difficulty: 'simple'),
-  MCQ(id: 2, question: 'বাংলাদেশের সংবিধান কার্যকর হয় কবে?',
-    options: ['২৬ মার্চ ১৯৭১', '১৬ ডিসেম্বর ১৯৭১',
-      '৪ নভেম্বর ১৯৭২', '১৬ ডিসেম্বর ১৯৭২'],
-    answer: 3, difficulty: 'simple'),
-  MCQ(id: 3, question: 'দেওয়ানি কার্যবিধি কোন সালের আইন?',
+    answer: 1,
+    difficulty: 'simple',
+  ),
+  MCQ(
+    id: 2,
+    question: 'বাংলাদেশের সংবিধান কার্যকর হয় কবে?',
+    options: [
+      '২৬ মার্চ ১৯৭১',
+      '১৬ ডিসেম্বর ১৯৭১',
+      '৪ নভেম্বর ১৯৭২',
+      '১৬ ডিসেম্বর ১৯৭২',
+    ],
+    answer: 3,
+    difficulty: 'simple',
+  ),
+  MCQ(
+    id: 3,
+    question: 'দেওয়ানি কার্যবিধি কোন সালের আইন?',
     options: ['১৮৬০', '১৮৭২', '১৯০৮', '১৮৯৮'],
-    answer: 2, difficulty: 'easy'),
-  MCQ(id: 4, question: 'বাংলাদেশের দণ্ডবিধি কোন সালের?',
+    answer: 2,
+    difficulty: 'easy',
+  ),
+  MCQ(
+    id: 4,
+    question: 'বাংলাদেশের দণ্ডবিধি কোন সালের?',
     options: ['১৮৬০', '১৮৭২', '১৯০৮', '১৮৯৮'],
-    answer: 0, difficulty: 'simple'),
-  MCQ(id: 5, question: 'সাক্ষ্য আইন কোন সালের?',
+    answer: 0,
+    difficulty: 'simple',
+  ),
+  MCQ(
+    id: 5,
+    question: 'সাক্ষ্য আইন কোন সালের?',
     options: ['১৮৬০', '১৮৭২', '১৯০৮', '১৯০৯'],
-    answer: 1, difficulty: 'simple'),
-  MCQ(id: 6, question: 'ফৌজদারি কার্যবিধি কোন সালের?',
+    answer: 1,
+    difficulty: 'simple',
+  ),
+  MCQ(
+    id: 6,
+    question: 'ফৌজদারি কার্যবিধি কোন সালের?',
     options: ['১৮৬০', '১৮৭২', '১৮৯৮', '১৯০৮'],
-    answer: 2, difficulty: 'simple'),
-  MCQ(id: 7, question: 'বাংলাদেশের সুপ্রিম কোর্টের বিভাগ কয়টি?',
+    answer: 2,
+    difficulty: 'simple',
+  ),
+  MCQ(
+    id: 7,
+    question: 'বাংলাদেশের সুপ্রিম কোর্টের বিভাগ কয়টি?',
     options: ['একটি', 'দুটি', 'তিনটি', 'চারটি'],
-    answer: 1, difficulty: 'simple'),
-  MCQ(id: 8, question: 'সংবিধানের ১০২ অনুচ্ছেদ মূলত কোন বিষয়ে?',
-    options: ['রিট এখতিয়ার', 'রাষ্ট্রপতি',
-      'অর্থ বিল', 'নির্বাচন'],
-    answer: 0, difficulty: 'easy'),
-  MCQ(id: 9, question: 'বাংলাদেশের রাষ্ট্রের নাম কী?',
-    options: ['বাংলাদেশ প্রজাতন্ত্র', 'গণপ্রজাতন্ত্রী বাংলাদেশ',
-      'বাংলাদেশ ইউনিয়ন', 'বাংলাদেশ রাজ্য'],
-    answer: 1, difficulty: 'simple'),
-  MCQ(id: 10, question: 'বাংলাদেশের আইনসভা কী নামে পরিচিত?',
-    options: ['জাতীয় সংসদ', 'সুপ্রিম কোর্ট',
-      'মন্ত্রিপরিষদ', 'নির্বাচন কমিশন'],
-    answer: 0, difficulty: 'simple'),
+    answer: 1,
+    difficulty: 'simple',
+  ),
+  MCQ(
+    id: 8,
+    question: 'সংবিধানের ১০২ অনুচ্ছেদ মূলত কোন বিষয়ে?',
+    options: ['রিট এখতিয়ার', 'রাষ্ট্রপতি', 'অর্থ বিল', 'নির্বাচন'],
+    answer: 0,
+    difficulty: 'easy',
+  ),
+  MCQ(
+    id: 9,
+    question: 'বাংলাদেশের রাষ্ট্রের সাংবিধানিক নাম কী?',
+    options: [
+      'বাংলাদেশ প্রজাতন্ত্র',
+      'গণপ্রজাতন্ত্রী বাংলাদেশ',
+      'বাংলাদেশ ইউনিয়ন',
+      'বাংলাদেশ রাজ্য',
+    ],
+    answer: 1,
+    difficulty: 'simple',
+  ),
+  MCQ(
+    id: 10,
+    question: 'বাংলাদেশের আইনসভা কী নামে পরিচিত?',
+    options: ['জাতীয় সংসদ', 'সুপ্রিম কোর্ট', 'মন্ত্রিপরিষদ', 'নির্বাচন কমিশন'],
+    answer: 0,
+    difficulty: 'simple',
+  ),
 ];
 
 class QuestionBank {
   static final Map<int, List<MCQ>> _cache = {};
 
   static Future<List<MCQ>> load(int year) async {
-    if (_cache.containsKey(year)) return _cache[year]!;
+    if (_cache.containsKey(year)) {
+      return _cache[year]!;
+    }
 
-    if (year == 2012) {
-      try {
-        final raw = await rootBundle.loadString(
-          'assets/data/questions_2012.json',
-        );
-        final List<dynamic> data = jsonDecode(raw);
-        final questions = data
-            .map((e) => MCQ.fromJson(Map<String, dynamic>.from(e)))
-            .toList();
+    try {
+      final raw = await rootBundle.loadString(
+        'assets/data/questions_$year.json',
+      );
+      final decoded = jsonDecode(raw);
 
-        if (questions.isNotEmpty) {
-          _cache[year] = questions;
-          return questions;
-        }
-      } catch (_) {
-        // Empty or invalid JSON falls back to demonstration data.
+      if (decoded is! List) {
+        throw const FormatException('JSON-এর মূল ডেটা List হতে হবে।');
       }
 
-      final generated = List.generate(
-        100,
-        (i) {
-          final q = demoQuestions[i % demoQuestions.length];
-          return MCQ(
-            id: i + 1,
-            question: '[DEMO ${i + 1}] ${q.question}',
-            options: q.options,
-            answer: q.answer,
-            explanation: q.explanation,
-            difficulty: q.difficulty,
-          );
-        },
-      );
-      _cache[year] = generated;
-      return generated;
+      final questions = decoded.map((item) {
+        return MCQ.fromJson(
+          Map<String, dynamic>.from(item as Map),
+        );
+      }).toList();
+
+      if (questions.isNotEmpty) {
+        _cache[year] = questions;
+        return questions;
+      }
+    } catch (_) {
+      // ফাইল না থাকলে বা JSON ভুল হলে নিচের fallback চলবে।
+    }
+
+    // ২০১২ সালের জন্য শুধু পরীক্ষার প্রাথমিক UI যাচাইয়ের নমুনা।
+    // এটি আসল ১০০ প্রশ্নের বিকল্প নয়।
+    if (year == 2012) {
+      return demoQuestions;
     }
 
     return [];
   }
+}
 
-  static void clearCache() => _cache.clear();
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+
+    Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [navy, Color(0xFF153B65), navy],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(.06),
+                  border: Border.all(color: gold, width: 2),
+                ),
+                child: const Icon(
+                  Icons.account_balance,
+                  color: gold,
+                  size: 94,
+                ),
+              ),
+              const SizedBox(height: 28),
+              const Text(
+                'BANGLADESH\nBAR COUNCIL',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  height: 1.25,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'PREPARATION APP',
+                style: TextStyle(
+                  color: gold,
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Prepare • Practise • Achieve',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 42),
+              const SizedBox(
+                width: 150,
+                child: LinearProgressIndicator(
+                  color: gold,
+                  backgroundColor: Colors.white12,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'YOUR SUCCESS, OUR GOAL',
+                style: TextStyle(color: Colors.white54, fontSize: 10),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ModeInfo {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final Widget page;
+
+  const ModeInfo(
+    this.title, this.subtitle, this.icon, this.color, this.page,
+  );
 }
 
 class HomeScreen extends StatelessWidget {
@@ -152,72 +334,92 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final modes = [
-      _Mode('Reading Mode', 'Read MCQs like a book',
-        Icons.menu_book_rounded, blue, const ReadingScreen()),
-      _Mode('Exam Mode', '100 MCQ + OMR Sheet',
-        Icons.fact_check_rounded, green, const ExamSetupScreen()),
-      _Mode('Advance Mode', 'Hard • Easy • Simple • 9 sets',
-        Icons.psychology_alt_rounded, const Color(0xFFFF851B),
-        const AdvanceScreen()),
-      _Mode('2027 MCQ Mode', 'Future practice question bank',
-        Icons.auto_awesome_rounded, purple, const FutureScreen()),
+    final modes = <ModeInfo>[
+      ModeInfo(
+        'Reading Mode', 'বইয়ের মতো MCQ পড়ুন',
+        Icons.menu_book_rounded, blue, const ReadingScreen(),
+      ),
+      ModeInfo(
+        'Exam Mode', 'MCQ পরীক্ষা ও OMR',
+        Icons.fact_check_rounded, green, const ExamSetupScreen(),
+      ),
+      ModeInfo(
+        'Advance Mode', 'Hard • Easy • Simple',
+        Icons.psychology_alt_rounded, orange, const AdvanceScreen(),
+      ),
+      ModeInfo(
+        '2027 MCQ Mode', 'ভবিষ্যৎ প্রস্তুতি',
+        Icons.auto_awesome_rounded, purple, const FutureScreen(),
+      ),
     ];
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: navy,
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Bangladesh Bar Council',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-            Text('PREPARATION APP',
-              style: TextStyle(fontSize: 11, color: gold, letterSpacing: 1.4)),
+            Text(
+              'Bangladesh Bar Council',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+            ),
+            Text(
+              'PREPARATION APP',
+              style: TextStyle(color: gold, fontSize: 10, letterSpacing: 1.5),
+            ),
           ],
         ),
         actions: [
           IconButton(
             tooltip: 'About',
+            icon: const Icon(Icons.account_circle_outlined, color: gold),
             onPressed: () => showAboutDialog(
               context: context,
               applicationName: 'Biplob BAR Plan',
               applicationVersion: '1.0.0',
-              children: const [
-                Text('Bar Council MCQ practice application.'),
-              ],
             ),
-            icon: const Icon(Icons.account_circle_outlined, color: gold),
           ),
         ],
       ),
       drawer: Drawer(
         backgroundColor: navy2,
-        child: ListView(
-          children: [
-            const DrawerHeader(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.balance, color: gold, size: 42),
-                  SizedBox(height: 12),
-                  Text('Biplob BAR Plan',
-                    style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
-                  Text('Prepare • Practise • Achieve'),
-                ],
+        child: SafeArea(
+          child: ListView(
+            children: [
+              const DrawerHeader(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.account_balance, color: gold, size: 44),
+                    SizedBox(height: 12),
+                    Text(
+                      'Biplob BAR Plan',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                    Text('Prepare • Practise • Achieve'),
+                  ],
+                ),
               ),
-            ),
-            for (final m in modes)
-              ListTile(
-                leading: Icon(m.icon, color: m.color),
-                title: Text(m.title),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => m.page));
-                },
+              for (final mode in modes)
+                ListTile(
+                  leading: Icon(mode.icon, color: mode.color),
+                  title: Text(mode.title),
+                  subtitle: Text(mode.subtitle),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => mode.page),
+                    );
+                  },
+                ),
+              const Divider(color: Colors.white24),
+              const ListTile(
+                leading: Icon(Icons.info_outline, color: gold),
+                title: Text('About App'),
+                subtitle: Text('Bangladesh Bar Council preparation'),
               ),
-          ],
+            ],
+          ),
         ),
       ),
       body: SafeArea(
@@ -228,7 +430,7 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [navy2, Color(0xFF183B65)],
+                  colors: [navy2, Color(0xFF1B426E)],
                 ),
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(color: gold.withOpacity(.45)),
@@ -239,27 +441,37 @@ class HomeScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('WELCOME, FUTURE ADVOCATE',
-                          style: TextStyle(color: gold, fontSize: 11)),
+                        Text(
+                          'WELCOME, FUTURE ADVOCATE',
+                          style: TextStyle(color: gold, fontSize: 11),
+                        ),
                         SizedBox(height: 10),
-                        Text('Your journey to the Bar starts here.',
-                          style: TextStyle(fontSize: 19,
-                            fontWeight: FontWeight.bold)),
+                        Text(
+                          'Your journey to the Bar starts here.',
+                          style: TextStyle(
+                            fontSize: 19, fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         SizedBox(height: 8),
-                        Text('Read. Practise. Improve.',
-                          style: TextStyle(color: Colors.white70)),
+                        Text(
+                          'Read. Practise. Improve.',
+                          style: TextStyle(color: Colors.white70),
+                        ),
                       ],
                     ),
                   ),
-                  Icon(Icons.balance, size: 64, color: gold),
+                  Icon(Icons.balance, color: gold, size: 58),
                 ],
               ),
             ),
-            const SizedBox(height: 22),
-            const Text('CHOOSE YOUR MODE',
-              style: TextStyle(color: gold, fontWeight: FontWeight.bold,
-                letterSpacing: 1.3)),
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
+            const Text(
+              'CHOOSE YOUR MODE',
+              style: TextStyle(
+                color: gold, fontWeight: FontWeight.bold, letterSpacing: 1.3,
+              ),
+            ),
+            const SizedBox(height: 14),
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -268,40 +480,54 @@ class HomeScreen extends StatelessWidget {
                 crossAxisCount: 2,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: .92,
+                childAspectRatio: .84,
               ),
               itemBuilder: (context, i) {
                 final m = modes[i];
-                return InkWell(
+
+                return Material(
+                  color: m.color.withOpacity(.13),
                   borderRadius: BorderRadius.circular(20),
-                  onTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => m.page)),
-                  child: Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: m.color.withOpacity(.14),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: m.color.withOpacity(.75)),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => m.page),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(m.icon, color: m.color, size: 34),
-                        const Spacer(),
-                        Text(m.title,
-                          style: const TextStyle(fontWeight: FontWeight.bold,
-                            fontSize: 15)),
-                        const SizedBox(height: 7),
-                        Text(m.subtitle,
-                          style: const TextStyle(fontSize: 11,
-                            color: Colors.white70)),
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.bottomRight,
-                          child: Icon(Icons.arrow_forward,
-                            color: m.color, size: 19),
-                        ),
-                      ],
+                    child: Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: m.color.withOpacity(.8)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(m.icon, size: 36, color: m.color),
+                          const Spacer(),
+                          Text(
+                            m.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            m.subtitle,
+                            style: const TextStyle(
+                              fontSize: 12, color: Colors.white70,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Icon(
+                              Icons.arrow_forward_rounded,
+                              color: m.color,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -317,21 +543,26 @@ class HomeScreen extends StatelessWidget {
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('YOUR PREPARATION',
-                    style: TextStyle(color: gold,
-                      fontWeight: FontWeight.bold)),
-                  SizedBox(height: 8),
-                  Text('2012 demo bank • 100 test questions',
-                    style: TextStyle(color: Colors.white70)),
+                  Text(
+                    'YOUR PREPARATION',
+                    style: TextStyle(color: gold, fontWeight: FontWeight.bold),
+                  ),
                   SizedBox(height: 10),
+                  Text(
+                    'প্রশ্ন যোগ হলে সংশ্লিষ্ট বছরের অনুশীলন করতে পারবে।',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  SizedBox(height: 12),
                   LinearProgressIndicator(
-                    value: 0, minHeight: 7,
-                    backgroundColor: Colors.white12,
+                    value: 0,
                     color: gold,
+                    backgroundColor: Colors.white12,
                   ),
                   SizedBox(height: 8),
-                  Text('Progress will be tracked in a later version.',
-                    style: TextStyle(fontSize: 11, color: Colors.white60)),
+                  Text(
+                    'Prepare today • Achieve tomorrow',
+                    style: TextStyle(color: Colors.white54, fontSize: 11),
+                  ),
                 ],
               ),
             ),
@@ -342,233 +573,471 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _Mode {
-  final String title, subtitle;
-  final IconData icon;
-  final Color color;
-  final Widget page;
-  const _Mode(this.title, this.subtitle, this.icon, this.color, this.page);
-}
-
-const years = [2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019,
-  2020, 2021, 2022, 2023, 2024, 2025, 2026];
-
 class ReadingScreen extends StatefulWidget {
   const ReadingScreen({super.key});
+
   @override
   State<ReadingScreen> createState() => _ReadingScreenState();
 }
 
 class _ReadingScreenState extends State<ReadingScreen> {
-  int year = 2012, index = 0;
+  int year = 2012;
+  int index = 0;
   List<MCQ> questions = [];
   bool loading = true;
+  String? loadError;
 
-  Future<void> load() async {
-    setState(() { loading = true; index = 0; });
-    questions = await QuestionBank.load(year);
-    if (mounted) setState(() => loading = false);
+  // সোয়াইপ ও Previous/Next একই PageController ব্যবহার করে।
+  late final PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+    loadQuestions();
   }
 
   @override
-  void initState() { super.initState(); load(); }
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> loadQuestions() async {
+    setState(() {
+      loading = true;
+      index = 0;
+      loadError = null;
+    });
+
+    try {
+      final loaded = await QuestionBank.load(year);
+      if (!mounted) return;
+
+      setState(() {
+        questions = loaded;
+        loading = false;
+      });
+
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(0);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        loading = false;
+        loadError = 'প্রশ্ন লোড করা যায়নি: $e';
+      });
+    }
+  }
+
+  void goToPage(int page) {
+    if (page < 0 || page >= questions.length) return;
+
+    _pageController.animateToPage(
+      page,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeInOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final q = questions.isEmpty ? null : questions[index];
     return Scaffold(
-      appBar: AppBar(title: const Text('Reading Mode')),
-      body: loading
-        ? const Center(child: CircularProgressIndicator(color: gold))
-        : questions.isEmpty
-          ? _emptyYear(year)
-          : Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
+      appBar: AppBar(
+        title: const Text('Reading Mode'),
+        actions: [
+          IconButton(
+            tooltip: 'বছর পরিবর্তন',
+            icon: const Icon(Icons.tune, color: gold),
+            onPressed: () async {
+              final selected = await showDialog<int>(
+                context: context,
+                builder: (dialogContext) => SimpleDialog(
+                  backgroundColor: navy2,
+                  title: const Text('পরীক্ষার সাল নির্বাচন'),
                   children: [
-                    DropdownButton<int>(
-                      value: year,
-                      dropdownColor: navy2,
-                      items: years.map((y) => DropdownMenuItem(
-                        value: y, child: Text('$y'),
-                      )).toList(),
-                      onChanged: (v) { if (v != null) {
-                        setState(() => year = v); load();
-                      }},
-                    ),
-                    const Spacer(),
-                    Text('${index + 1} / ${questions.length}',
-                      style: const TextStyle(color: gold)),
+                    for (final y in years)
+                      SimpleDialogOption(
+                        onPressed: () => Navigator.pop(dialogContext, y),
+                        child: Text(
+                          '$y',
+                          style: TextStyle(
+                            color: y == year ? gold : Colors.white,
+                            fontWeight: y == year
+                                ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(18),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF6E4),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: gold, width: 2),
-                    ),
-                    child: DefaultTextStyle(
-                      style: const TextStyle(color: Color(0xFF252525),
-                        fontSize: 16, height: 1.55),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              );
+
+              if (selected != null && selected != year) {
+                setState(() => year = selected);
+                await loadQuestions();
+              }
+            },
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: loading
+            ? const Center(child: CircularProgressIndicator(color: gold))
+            : loadError != null
+                ? Center(child: Text(loadError!))
+                : questions.isEmpty
+                    ? _emptyYear(year)
+                    : Column(
                         children: [
-                          const Center(
-                            child: Text('BANGLADESH BAR COUNCIL',
-                              style: TextStyle(fontWeight: FontWeight.bold,
-                                color: navy, fontSize: 14)),
-                          ),
-                          const Divider(color: gold, height: 28),
-                          Text('Question ${q!.id}',
-                            style: const TextStyle(fontWeight: FontWeight.bold,
-                              color: navy)),
-                          const SizedBox(height: 12),
-                          Text(q.question,
-                            style: const TextStyle(fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 18),
-                          for (int i = 0; i < q.options.length; i++)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: Text(
-                                '${String.fromCharCode(65 + i)}. ${q.options[i]}',
-                                style: TextStyle(
-                                  color: i == q.answer
-                                    ? const Color(0xFF148044)
-                                    : const Color(0xFF252525),
-                                  fontWeight: i == q.answer
-                                    ? FontWeight.bold : FontWeight.normal,
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: navy2,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    'সাল: $year',
+                                    style: const TextStyle(
+                                      color: gold,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: green.withOpacity(.14),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'Correct Answer: ${String.fromCharCode(65 + q.answer)}',
-                              style: const TextStyle(color: Color(0xFF14713C),
-                                fontWeight: FontWeight.bold),
+                                const Spacer(),
+                                Text(
+                                  '${index + 1} / ${questions.length}',
+                                  style: const TextStyle(color: gold),
+                                ),
+                              ],
                             ),
                           ),
-                          if (q.explanation.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            Text(q.explanation),
-                          ],
+                          Expanded(
+                            child: PageView.builder(
+                              controller: _pageController,
+                              itemCount: questions.length,
+                              onPageChanged: (newIndex) {
+                                setState(() => index = newIndex);
+                              },
+                              itemBuilder: (context, i) {
+                                final q = questions[i];
+
+                                return SingleChildScrollView(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    14, 8, 14, 14,
+                                  ),
+                                  child: Container(
+                                    width: double.infinity,
+                                    constraints: const BoxConstraints(
+                                      minHeight: 390,
+                                    ),
+                                    padding: const EdgeInsets.all(20),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFF6E4),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: gold, width: 2,
+                                      ),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Colors.black26,
+                                          blurRadius: 10,
+                                          offset: Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: DefaultTextStyle(
+                                      style: const TextStyle(
+                                        color: Color(0xFF252525),
+                                        fontSize: 16,
+                                        height: 1.55,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Center(
+                                            child: Text(
+                                              'BANGLADESH BAR COUNCIL',
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: navy,
+                                                fontSize: 15,
+                                              ),
+                                            ),
+                                          ),
+                                          Center(
+                                            child: Text(
+                                              'ADVOCATE ENROLMENT MCQ • $year',
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                color: Color(0xFF666666),
+                                              ),
+                                            ),
+                                          ),
+                                          const Divider(
+                                            color: gold, height: 28,
+                                          ),
+                                          Text(
+                                            'প্রশ্ন ${q.id}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: navy,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            q.question,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 18),
+                                          for (int j = 0;
+                                              j < q.options.length;
+                                              j++)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                bottom: 10,
+                                              ),
+                                              child: Text(
+                                                '${String.fromCharCode(65 + j)}. ${q.options[j]}',
+                                                style: TextStyle(
+                                                  color: j == q.answer
+                                                      ? const Color(0xFF14713C)
+                                                      : const Color(0xFF252525),
+                                                  fontWeight: j == q.answer
+                                                      ? FontWeight.bold
+                                                      : FontWeight.normal,
+                                                ),
+                                              ),
+                                            ),
+                                          const SizedBox(height: 12),
+                                          Container(
+                                            width: double.infinity,
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                              color: green.withOpacity(.14),
+                                              borderRadius:
+                                              BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              'সঠিক উত্তর: ${String.fromCharCode(65 + q.answer)}',
+                                              style: const TextStyle(
+                                                color: Color(0xFF14713C),
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+
+                                          if (q.explanation.isNotEmpty) ...[
+                                            const SizedBox(height: 12),
+                                            Text(q.explanation),
+                                          ],
+                                          const SizedBox(height: 20),
+                                          const Center(
+                                            child: Text(
+                                              '• • • • •',
+                                              style: TextStyle(
+                                                color: Color(0xFF999999),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+
+                          Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: index > 0
+                                        ? () => goToPage(index - 1)
+                                        : null,
+                                    icon: const Icon(Icons.arrow_back),
+                                    label: const Text('Previous'),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: FilledButton.icon(
+                                    onPressed: index < questions.length - 1
+                                        ? () => goToPage(index + 1)
+                                        : null,
+                                    icon: const Icon(Icons.arrow_forward),
+                                    label: const Text('Next'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Expanded(child: OutlinedButton(
-                      onPressed: index > 0
-                        ? () => setState(() => index--) : null,
-                      child: const Text('← Previous'),
-                    )),
-                    const SizedBox(width: 10),
-                    Expanded(child: FilledButton(
-                      onPressed: index < questions.length - 1
-                        ? () => setState(() => index++) : null,
-                      child: const Text('Next →'),
-                    )),
-                  ],
-                ),
-              ),
-            ],
-          ),
+      ),
     );
   }
 }
 
-Widget _emptyYear(int year) => Center(
-  child: Padding(
-    padding: const EdgeInsets.all(24),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.menu_book, size: 60, color: gold),
-        const SizedBox(height: 16),
-        Text('$year সালের প্রশ্ন এখনো যোগ করা হয়নি.',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 18)),
-        const SizedBox(height: 8),
-        const Text('প্রশ্নের JSON ডেটা যোগ করলে এই সাল সক্রিয় হবে.',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white70)),
-      ],
+Widget _emptyYear(int year) {
+  return Center(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.menu_book_rounded, size: 64, color: gold),
+          const SizedBox(height: 16),
+          Text(
+            '$year সালের প্রশ্ন এখনো যোগ করা হয়নি।',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 18),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'assets/data/questions_YEAR.json ফাইলে প্রশ্ন যোগ করলে '
+            'এই সাল সক্রিয় হবে।',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white70),
+          ),
+        ],
+      ),
     ),
-  ),
-);
+  );
+}
+
 
 class ExamSetupScreen extends StatefulWidget {
   const ExamSetupScreen({super.key});
+
   @override
   State<ExamSetupScreen> createState() => _ExamSetupScreenState();
 }
 
 class _ExamSetupScreenState extends State<ExamSetupScreen> {
   int year = 2012;
+  bool starting = false;
+
+  Future<void> startExam() async {
+    setState(() => starting = true);
+
+    final qs = await QuestionBank.load(year);
+
+    if (!mounted) return;
+    setState(() => starting = false);
+
+    if (qs.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$year সালের প্রশ্ন এখনো যোগ করা হয়নি।')),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ExamScreen(year: year, questions: qs),
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Exam Mode')),
-    body: Padding(
-      padding: const EdgeInsets.all(22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.fact_check, color: green, size: 64),
-          const SizedBox(height: 18),
-          const Text('Full Model Test',
-            style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          const Text('100 MCQ • 100 marks • Negative marking 0.25',
-            style: TextStyle(color: Colors.white70)),
-          const SizedBox(height: 22),
-          const Text('Select examination year'),
-          DropdownButton<int>(
-            value: year,
-            isExpanded: true,
-            dropdownColor: navy2,
-            items: years.map((y) => DropdownMenuItem(
-              value: y, child: Text('$y'),
-            )).toList(),
-            onChanged: (v) { if (v != null) setState(() => year = v); },
-          ),
-          const Spacer(),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('START EXAM'),
-              onPressed: () async {
-                final qs = await QuestionBank.load(year);
-                if (!context.mounted) return;
-                if (qs.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(
-                      'No questions available for $year.')),
-                  );
-                  return;
-                }
-                Navigator.push(context, MaterialPageRoute(
-                  builder: (_) => ExamScreen(year: year, questions: qs),
-                ));
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Exam Mode')),
+      body: Padding(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.fact_check_rounded, color: green, size: 65),
+            const SizedBox(height: 18),
+            const Text(
+              'FULL MODEL TEST',
+              style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'প্রকৃত পরীক্ষার মতো MCQ অনুশীলন করো।',
+              style: TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 22),
+            _infoTile('পূর্ণমান', '১০০'),
+            _infoTile('প্রতি সঠিক উত্তর', '+১'),
+            _infoTile('প্রতি ভুল উত্তর', '−০.২৫'),
+            _infoTile('উত্তর না দিলে', '০'),
+            const SizedBox(height: 22),
+            const Text(
+              'পরীক্ষার সাল নির্বাচন করো',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<int>(
+              value: year,
+              dropdownColor: navy2,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.calendar_month, color: gold),
+              ),
+              items: years.map((y) {
+                return DropdownMenuItem(value: y, child: Text('$y'));
+              }).toList(),
+              onChanged: (v) {
+                if (v != null) setState(() => year = v);
               },
+            ),
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: starting ? null : startExam,
+                icon: starting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.play_arrow_rounded),
+                label: Text(starting ? 'লোড হচ্ছে...' : 'START EXAM'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Widget _infoTile(String title, String value) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Container(
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: navy2,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: Text(title)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: gold, fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -580,7 +1049,13 @@ class _ExamSetupScreenState extends State<ExamSetupScreen> {
 class ExamScreen extends StatefulWidget {
   final int year;
   final List<MCQ> questions;
-  const ExamScreen({super.key, required this.year, required this.questions});
+
+  const ExamScreen({
+    super.key,
+    required this.year,
+    required this.questions,
+  });
+
   @override
   State<ExamScreen> createState() => _ExamScreenState();
 }
@@ -590,14 +1065,49 @@ class _ExamScreenState extends State<ExamScreen> {
   int index = 0;
   bool submitted = false;
 
-  int get correct => answers.entries.where(
-    (e) => widget.questions[e.key].answer == e.value).length;
-  int get wrong => answers.length - correct;
-  int get unanswered => widget.questions.length - answers.length;
-  double get score => correct - wrong * .25;
+  int get correct {
+    return answers.entries.where(
+      (e) => widget.questions[e.key].answer == e.value,
+    ).length;
+  }
 
-  void finish() {
+  int get wrong => answers.length - correct;
+
+  int get unanswered => widget.questions.length - answers.length;
+
+  double get score => correct - wrong * 0.25;
+
+  void finishExam() {
     setState(() => submitted = true);
+  }
+
+  Future<void> confirmSubmit() async {
+    final shouldSubmit = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('পরীক্ষা জমা দেবে?'),
+        content: Text(
+          'মোট প্রশ্ন: ${widget.questions.length}\n'
+          'উত্তর দিয়েছ: ${answers.length}\n'
+          'উত্তর বাকি: $unanswered\n\n'
+          'জমা দিলে ফলাফল দেখা যাবে।',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('ফিরে যাও'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('জমা দাও'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldSubmit == true && mounted) {
+      finishExam();
+    }
   }
 
   @override
@@ -611,195 +1121,243 @@ class _ExamScreenState extends State<ExamScreen> {
         actions: [
           if (!submitted)
             TextButton(
-              onPressed: () => showDialog(
-                context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text('Submit exam?'),
-                  content: Text(
-                    'Answered: ${answers.length}/${qs.length}\n'
-                    'Unanswered: $unanswered'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Continue'),
-                    ),
-                    FilledButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        finish();
-                      },
-                      child: const Text('Submit'),
-                    ),
-                  ],
-                ),
+              onPressed: confirmSubmit,
+              child: const Text(
+                'SUBMIT',
+                style: TextStyle(color: gold, fontWeight: FontWeight.bold),
               ),
-              child: const Text('SUBMIT',
-                style: TextStyle(color: gold)),
             ),
         ],
       ),
       body: submitted
-        ? _resultView()
-        : Column(
-          children: [
-            LinearProgressIndicator(
-              value: (index + 1) / qs.length,
-              color: gold, backgroundColor: Colors.white12,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Text('Question ${index + 1}/${qs.length}'),
-                  const Spacer(),
-                  Text('Answered ${answers.length}',
-                    style: const TextStyle(color: gold)),
-                ],
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: navy2,
-                        borderRadius: BorderRadius.circular(16),
+          ? _resultView()
+          : Column(
+              children: [
+                LinearProgressIndicator(
+                  value: (index + 1) / qs.length,
+                  color: gold,
+                  backgroundColor: Colors.white12,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Text('প্রশ্ন ${index + 1}/${qs.length}'),
+                      const Spacer(),
+                      Text(
+                        'উত্তর: ${answers.length}',
+                        style: const TextStyle(color: gold),
                       ),
-                      child: Text(q.question,
-                        style: const TextStyle(fontSize: 18,
-                          fontWeight: FontWeight.bold)),
-                    ),
-                    const SizedBox(height: 12),
-                    for (int i = 0; i < q.options.length; i++)
-                      Card(
-                        color: answers[index] == i
-                          ? blue.withOpacity(.24) : navy2,
-                        child: RadioListTile<int>(
-                          value: i,
-                          groupValue: answers[index],
-                          onChanged: (v) {
-                            if (v != null) setState(() => answers[index] = v);
-                          },
-                          title: Text(
-                            '${String.fromCharCode(65 + i)}. ${q.options[i]}'),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: navy2,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white12),
+                        ),
+                        child: Text(
+                          q.question,
+                          style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold,
+                            height: 1.5,
+                          ),
                         ),
                       ),
-                    const SizedBox(height: 18),
-                    const Text('OMR ANSWER SHEET',
-                      style: TextStyle(color: red, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    _omr(qs, answers, null, null),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Expanded(child: OutlinedButton(
-                    onPressed: index > 0 ? () => setState(() => index--) : null,
-                    child: const Text('Previous'),
-                  )),
-                  const SizedBox(width: 8),
-                  Expanded(child: FilledButton(
-                    onPressed: index < qs.length - 1
-                      ? () => setState(() => index++)
-                      : () => showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: const Text('Last question'),
-                          content: const Text('Submit the exam now?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('Review'),
+                      const SizedBox(height: 12),
+                      for (int i = 0; i < q.options.length; i++)
+                        Card(
+                          color: answers[index] == i
+                              ? blue.withOpacity(.25)
+                              : navy2,
+                          child: RadioListTile<int>(
+                            value: i,
+                            groupValue: answers[index],
+                            activeColor: gold,
+                            onChanged: (v) {
+                              if (v != null) {
+                                setState(() => answers[index] = v);
+                              }
+                            },
+                            title: Text(
+                              '${String.fromCharCode(65 + i)}. ${q.options[i]}',
                             ),
-                            FilledButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                finish();
-                              },
-                              child: const Text('Submit'),
+                          ),
+                        ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF4F4),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: red),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'OMR ANSWER SHEET',
+                              style: TextStyle(
+                                color: red, fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'প্রশ্ন ${index + 1}: '
+                              '${answers[index] == null ? "এখনো উত্তর দাওনি" : String.fromCharCode(65 + answers[index]!)}',
+                              style: const TextStyle(color: Colors.black87),
+                            ),
+                            const SizedBox(height: 8),
+                            _omr(
+                              qs,
+                              answers,
+                              submitted: false,
                             ),
                           ],
                         ),
                       ),
-                    child: Text(index < qs.length - 1 ? 'Next' : 'Finish'),
-                  )),
-                ],
-              ),
+                      const SizedBox(height: 14),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: index > 0
+                              ? () => setState(() => index--)
+                              : null,
+                          icon: const Icon(Icons.arrow_back),
+                          label: const Text('Previous'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: index < qs.length - 1
+                              ? () => setState(() => index++)
+                              : confirmSubmit,
+                          icon: Icon(
+                            index < qs.length - 1
+                                ? Icons.arrow_forward
+                                : Icons.check,
+                          ),
+                          label: Text(
+                            index < qs.length - 1 ? 'Next' : 'Finish',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
     );
   }
 
-  Widget _resultView() => ListView(
-    padding: const EdgeInsets.all(18),
-    children: [
-      const Icon(Icons.emoji_events, size: 76, color: gold),
-      const Center(child: Text('TEST COMPLETED',
-        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold))),
-      const SizedBox(height: 18),
-      _stat('Total Questions', '${widget.questions.length}', gold),
-      _stat('Correct Answers', '$correct', green),
-      _stat('Wrong Answers', '$wrong', red),
-      _stat('Unanswered', '$unanswered', Colors.orange),
-      _stat('Final Score', '${score.toStringAsFixed(2)} / 100', gold),
-      const SizedBox(height: 18),
-      const Text('OMR REVIEW',
-        style: TextStyle(color: red, fontWeight: FontWeight.bold)),
-      const SizedBox(height: 10),
-      _omr(widget.questions, answers, correct, wrong),
-      const SizedBox(height: 20),
-      const Text('ANSWER REVIEW',
-        style: TextStyle(color: gold, fontWeight: FontWeight.bold)),
-      for (int i = 0; i < widget.questions.length; i++)
-        Card(
-          color: navy2,
-          child: ListTile(
-            leading: Icon(
-              !answers.containsKey(i) ? Icons.remove_circle_outline
-                : answers[i] == widget.questions[i].answer
-                  ? Icons.check_circle : Icons.cancel,
-              color: !answers.containsKey(i) ? Colors.orange
-                : answers[i] == widget.questions[i].answer ? green : red,
-            ),
-            title: Text('${i + 1}. ${widget.questions[i].question}'),
-            subtitle: Text(
-              'Your answer: ${answers.containsKey(i)
-                ? String.fromCharCode(65 + answers[i]!)
-                : "Not answered"}'
-              ' • Correct: ${String.fromCharCode(65 + widget.questions[i].answer)}'),
+  Widget _resultView() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const Icon(Icons.emoji_events_rounded, color: gold, size: 76),
+        const Center(
+          child: Text(
+            'TEST COMPLETED',
+            style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
           ),
         ),
-      FilledButton(
-        onPressed: () => Navigator.popUntil(context, (r) => r.isFirst),
-        child: const Text('Back to Home'),
-      ),
-    ],
-  );
+        const SizedBox(height: 8),
+        Center(
+          child: Text(
+            '${widget.year} • MCQ Result',
+            style: const TextStyle(color: Colors.white70),
+          ),
+        ),
+        const SizedBox(height: 20),
+        _resultStat('মোট প্রশ্ন', '${widget.questions.length}', gold),
+        _resultStat('সঠিক উত্তর', '$correct', green),
+        _resultStat('ভুল উত্তর', '$wrong', red),
+        _resultStat('উত্তর দাওনি', '$unanswered', orange),
+        _resultStat('প্রাপ্ত নম্বর', score.toStringAsFixed(2), gold),
+        const SizedBox(height: 22),
+        const Text(
+          'OMR ANSWER REVIEW',
+          style: TextStyle(color: gold, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        _omr(widget.questions, answers, submitted: true),
+        const SizedBox(height: 22),
+        const Text(
+          'ANSWER REVIEW',
+          style: TextStyle(color: gold, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        for (int i = 0; i < widget.questions.length; i++)
+          Card(
+            color: navy2,
+            child: ListTile(
+              leading: Icon(
+                !answers.containsKey(i)
+                    ? Icons.remove_circle_outline
+                    : answers[i] == widget.questions[i].answer
+                        ? Icons.check_circle
+                        : Icons.cancel,
+                color: !answers.containsKey(i)
+                    ? orange
+                    : answers[i] == widget.questions[i].answer
+                        ? green
+                        : red,
+              ),
+              title: Text('${i + 1}. ${widget.questions[i].question}'),
+              subtitle: Text(
+                'তোমার উত্তর: ${answers.containsKey(i) ? String.fromCharCode(65 + answers[i]!) : "দেওয়া হয়নি"}'
+                '\nসঠিক উত্তর: ${String.fromCharCode(65 + widget.questions[i].answer)}',
+              ),
+              isThreeLine: true,
+            ),
+          ),
+        const SizedBox(height: 12),
+        FilledButton.icon(
+          onPressed: () => Navigator.popUntil(
+            context, (route) => route.isFirst,
+          ),
+          icon: const Icon(Icons.home),
+          label: const Text('Back to Home'),
+        ),
+      ],
+    );
+  }
 
-  Widget _stat(String label, String value, Color color) => Card(
-    color: navy2,
-    child: ListTile(
-      leading: Icon(Icons.circle, color: color, size: 13),
-      title: Text(label),
-      trailing: Text(value,
-        style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-    ),
-  );
+  Widget _resultStat(String label, String value, Color color) {
+    return Card(
+      color: navy2,
+      child: ListTile(
+        leading: Icon(Icons.circle, color: color, size: 13),
+        title: Text(label),
+        trailing: Text(
+          value,
+          style: TextStyle(color: color, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
 }
 
-Widget _omr(List<MCQ> qs, Map<int, int> answers,
-  int? correct, int? wrong) {
+Widget _omr(
+  List<MCQ> questions,
+  Map<int, int> answers, {
+  required bool submitted,
+}) {
   return Container(
+    width: double.infinity,
     padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(
       color: const Color(0xFFFFF4F4),
@@ -809,21 +1367,31 @@ Widget _omr(List<MCQ> qs, Map<int, int> answers,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Center(child: Text('OMR • ANSWER SHEET',
-          style: TextStyle(color: red, fontWeight: FontWeight.bold))),
+        const Center(
+          child: Text(
+            'OMR • ANSWER SHEET',
+            style: TextStyle(color: red, fontWeight: FontWeight.bold),
+          ),
+        ),
         const Divider(color: red),
         Wrap(
-          spacing: 4,
-          runSpacing: 4,
-          children: List.generate(qs.length, (i) {
+          spacing: 5,
+          runSpacing: 5,
+          children: List.generate(questions.length, (i) {
             final chosen = answers[i];
-            final isRight = chosen != null && chosen == qs[i].answer;
+            final isRight = chosen != null && chosen == questions[i].answer;
             final isWrong = chosen != null && !isRight;
-            final color = correct == null
-              ? (chosen == null ? Colors.black38 : red)
-              : isRight ? green : isWrong ? red : Colors.black38;
+
+            final color = !submitted
+                ? (chosen == null ? Colors.black38 : red)
+                : isRight
+                    ? green
+                    : isWrong
+                        ? red
+                        : Colors.black38;
+
             return Container(
-              width: 54,
+              width: 55,
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -832,41 +1400,68 @@ Widget _omr(List<MCQ> qs, Map<int, int> answers,
               ),
               child: Column(
                 children: [
-                  Text('${i + 1}',
-                    style: const TextStyle(color: Colors.black,
-                      fontSize: 11, fontWeight: FontWeight.bold)),
+                  Text(
+                    '${i + 1}',
+                    style: const TextStyle(
+                      color: Colors.black, fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: List.generate(4, (j) {
                       final selected = chosen == j;
+                      final isCorrectOption = questions[i].answer == j;
+
+                      String symbol = String.fromCharCode(65 + j);
+                      Color symbolColor = Colors.black54;
+
+                      if (selected) {
+                        if (!submitted) {
+                          symbol = '●';
+                          symbolColor = blue;
+                        } else if (isRight) {
+                          symbol = '✓';
+                          symbolColor = green;
+                        } else {
+                          symbol = '✕';
+                          symbolColor = red;
+                        }
+                      } else if (submitted && isCorrectOption && isWrong) {
+                        symbol = '✓';
+                        symbolColor = green;
+                      }
+
                       return Text(
-                        selected
-                          ? (correct == null ? '●'
-                            : isRight ? '✓' : '✕')
-                          : String.fromCharCode(65 + j),
+                        symbol,
                         style: TextStyle(
+                          color: symbolColor,
                           fontSize: 10,
-                          color: selected ? color : Colors.black54,
-                          fontWeight: selected ? FontWeight.bold : null,
+                          fontWeight: FontWeight.bold,
                         ),
                       );
                     }),
                   ),
-                  if (correct != null && chosen == null)
-                    const Text('—', style: TextStyle(
-                      color: Colors.black45, fontSize: 10)),
+                  if (submitted && chosen == null)
+                    const Text(
+                      '—',
+                      style: TextStyle(color: Colors.black45, fontSize: 10),
+                    ),
                 ],
               ),
             );
           }),
         ),
         const SizedBox(height: 8),
-        const Text('✓ Correct     ✕ Wrong     — Unanswered',
-          style: TextStyle(color: Colors.black87, fontSize: 11)),
+        const Text(
+          '✓ সঠিক   ✕ ভুল   — উত্তর দেওয়া হয়নি',
+          style: TextStyle(color: Colors.black87, fontSize: 11),
+        ),
       ],
     ),
   );
 }
+
 
 class AdvanceScreen extends StatelessWidget {
   const AdvanceScreen({super.key});
@@ -874,9 +1469,27 @@ class AdvanceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final modes = [
-      ('Hard Mode', '3 sets • Most difficult questions', red, 'hard'),
-      ('Easy Mode', '3 sets • Moderate difficulty', blue, 'easy'),
-      ('Simple Mode', '3 sets • Basic concepts', green, 'simple'),
+      (
+        'Hard Mode',
+        'সবচেয়ে কঠিন প্রশ্ন',
+        red,
+        'hard',
+        Icons.psychology_alt_rounded,
+      ),
+      (
+        'Easy Mode',
+        'মাঝারি কঠিনতার প্রশ্ন',
+        blue,
+        'easy',
+        Icons.track_changes_rounded,
+      ),
+      (
+        'Simple Mode',
+        'সহজ ও মৌলিক প্রশ্ন',
+        green,
+        'simple',
+        Icons.star_rounded,
+      ),
     ];
 
     return Scaffold(
@@ -884,33 +1497,54 @@ class AdvanceScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text('9 SET QUESTION BANK',
-            style: TextStyle(color: gold, fontSize: 20,
-              fontWeight: FontWeight.bold)),
+          const Text(
+            '9 SET QUESTION BANK',
+            style: TextStyle(
+              color: gold, fontSize: 22, fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 8),
-          const Text('Choose your difficulty level.',
-            style: TextStyle(color: Colors.white70)),
-          const SizedBox(height: 18),
+          const Text(
+            'তোমার প্রস্তুতি অনুযায়ী একটি Difficulty Mode বেছে নাও।',
+            style: TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(height: 20),
           for (final m in modes)
             Card(
-              color: m.$3.withOpacity(.17),
+              color: m.$3.withOpacity(.15),
               child: ListTile(
-                contentPadding: const EdgeInsets.all(15),
-                leading: Icon(Icons.workspace_premium,
-                  color: m.$3, size: 34),
-                title: Text(m.$1,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
+                contentPadding: const EdgeInsets.all(16),
+                leading: Icon(m.$5, color: m.$3, size: 36),
+                title: Text(
+                  m.$1,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 subtitle: Text(m.$2),
-                trailing: const Icon(Icons.arrow_forward),
-                onTap: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) =>
-                    SetSelectionScreen(difficulty: m.$4))),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 17),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SetSelectionScreen(
+                      difficulty: m.$4,
+                      title: m.$1,
+                    ),
+                  ),
+                ),
               ),
             ),
-          const SizedBox(height: 12),
-          const Text('Question difficulty must be assigned using reviewed '
-            'historical questions. Demo data is not an official classification.',
-            style: TextStyle(color: Colors.white60, fontSize: 12)),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: navy2,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Text(
+              'প্রকৃত Hard, Easy ও Simple শ্রেণিবিন্যাসের জন্য '
+              'প্রতিটি ঐতিহাসিক প্রশ্ন যাচাই করে difficulty নির্ধারণ করতে হবে।',
+              style: TextStyle(color: Colors.white70, height: 1.5),
+            ),
+          ),
         ],
       ),
     );
@@ -919,93 +1553,170 @@ class AdvanceScreen extends StatelessWidget {
 
 class SetSelectionScreen extends StatelessWidget {
   final String difficulty;
-  const SetSelectionScreen({super.key, required this.difficulty});
+  final String title;
+
+  const SetSelectionScreen({
+    super.key,
+    required this.difficulty,
+    required this.title,
+  });
+
+  Future<void> startSet(BuildContext context, int setNumber) async {
+    final all = await QuestionBank.load(2012);
+
+    if (!context.mounted) return;
+
+    final filtered = all.where(
+      (q) => q.difficulty.toLowerCase() == difficulty.toLowerCase(),
+    ).toList();
+
+    if (filtered.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'এই Difficulty Mode-এ এখনো কোনো প্রশ্ন যোগ করা হয়নি।',
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Set 1, 2, 3-এর জন্য আলাদা অংশ বেছে নেওয়া।
+    final start = ((setNumber - 1) * 30) % filtered.length;
+    final rotated = [
+      ...filtered.skip(start),
+      ...filtered.take(start),
+    ];
+    final selected = rotated.take(30).toList();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ExamScreen(
+          year: 2012,
+          questions: selected,
+        ),
+      ),
+    );
+  }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text('${difficulty.toUpperCase()} SETS')),
-    body: ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        for (int i = 1; i <= 3; i++)
-          Card(
-            color: navy2,
-            child: ListTile(
-              leading: const Icon(Icons.quiz, color: gold),
-              title: Text('Set $i'),
-              subtitle: const Text('Question set'),
-              trailing: const Icon(Icons.arrow_forward),
-              onTap: () async {
-                final qs = await QuestionBank.load(2012);
-                if (!context.mounted) return;
-                final filtered = qs.where((q) =>
-                  q.difficulty == difficulty).toList();
-                final setQuestions = filtered.isEmpty
-                  ? qs.take(30).toList()
-                  : filtered.take(30).toList();
-                Navigator.push(context, MaterialPageRoute(
-                  builder: (_) => ExamScreen(
-                    year: 2012, questions: setQuestions),
-                ));
-              },
+  Widget build(BuildContext context) {
+    final color = difficulty == 'hard'
+        ? red
+        : difficulty == 'easy'
+            ? blue
+            : green;
+
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          for (int i = 1; i <= 3; i++)
+            Card(
+              color: navy2,
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(16),
+                leading: CircleAvatar(
+                  backgroundColor: color.withOpacity(.2),
+                  child: Text(
+                    '$i',
+                    style: TextStyle(
+                      color: color, fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                title: Text('Set $i'),
+                subtitle: const Text('সর্বোচ্চ ৩০টি প্রশ্ন'),
+                trailing: const Icon(Icons.play_arrow, color: gold),
+                onTap: () => startSet(context, i),
+              ),
             ),
-          ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
 
 class FutureScreen extends StatelessWidget {
   const FutureScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('2027 MCQ Mode')),
-    body: ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF30206C), Color(0xFF12518D)],
+  Widget build(BuildContext context) {
+    final features = [
+      'ঐতিহাসিক MCQ-এর Pattern Analysis',
+      'আইন ও বিষয়ভিত্তিক প্রশ্ন বাছাই',
+      'কঠিনতা অনুযায়ী অনুশীলন',
+      'নতুন Practice MCQ ও উত্তর যাচাই',
+    ];
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('2027 MCQ Mode')),
+      body: ListView(
+        padding: const EdgeInsets.all(18),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF30206C), Color(0xFF12518D)],
+              ),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: purple),
             ),
-            borderRadius: BorderRadius.circular(22),
+            child: const Column(
+              children: [
+                Icon(Icons.psychology_alt_rounded, size: 72, color: gold),
+                SizedBox(height: 14),
+                Text(
+                  'AI-ASSISTED MCQ PRACTICE',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 21, fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'Prepare for the next examination',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
           ),
-          child: const Column(
-            children: [
-              Icon(Icons.psychology_alt, size: 70, color: gold),
-              SizedBox(height: 12),
-              Text('2027 MCQ PRACTICE',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              SizedBox(height: 8),
-              Text('Pattern-based preparation',
-                style: TextStyle(color: Colors.white70)),
-            ],
+          const SizedBox(height: 24),
+          const Text(
+            'PLANNED FEATURES',
+            style: TextStyle(
+              color: gold, fontSize: 19, fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        const SizedBox(height: 20),
-        const Text('Planned features',
-          style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12),
-        for (final s in [
-          'Historical question trend analysis',
-          'Topic-wise question distribution',
-          'Difficulty-based practice',
-          'New practice questions with verified answers',
-        ])
-          ListTile(
-            leading: const Icon(Icons.check_circle, color: green),
-            title: Text(s),
+          const SizedBox(height: 12),
+          for (final feature in features)
+            ListTile(
+              leading: const Icon(Icons.check_circle, color: green),
+              title: Text(feature),
+            ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: navy2,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Text(
+              'এই সংস্করণে AI সংযুক্ত নেই। ভবিষ্যতে AI API বা '
+              'যাচাইকৃত প্রশ্নের ডেটাবেস যুক্ত করে এই মোড চালু করতে হবে। '
+              'আইন পরিবর্তিত হলে প্রশ্ন ও উত্তরও যাচাই করা জরুরি।',
+              style: TextStyle(color: Colors.white70, height: 1.6),
+            ),
           ),
-        const SizedBox(height: 12),
-        const Text(
-          'This mode currently shows a feature preview. '
-          'AI-generated questions and pattern analysis are not connected yet. '
-          'Generated questions should be checked against current Bangladeshi law.',
-          style: TextStyle(color: Colors.white60),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
+
+
+                                  
