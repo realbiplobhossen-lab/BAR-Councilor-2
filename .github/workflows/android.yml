@@ -1,4 +1,3 @@
-
 name: Build Biplob BAR Plan APK
 
 on:
@@ -24,22 +23,29 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Check Flutter
-        run: flutter --version
+      - name: Verify App Source
+        run: |
+          echo "Checking Flutter application source..."
+          test -f lib/main.dart
+          grep -n "BarPrepApp" lib/main.dart
+          echo "Source file found."
 
-      - name: Generate Missing Android Project Files
+      - name: Generate Android Platform Files
         run: |
           flutter create \
             --platforms=android \
             --org com.biplob.barplan \
             --project-name biplob_bar_plan \
-            --overwrite .
+            --no-pub /tmp/biplob_bar_plan
+
+          rm -rf android
+          cp -R /tmp/biplob_bar_plan/android ./android
 
       - name: Verify Android Gradle Files
         run: |
-          ls -la android
-          ls -la android/app
-          test -f android/app/build.gradle -o -f android/app/build.gradle.kts
+          test -f android/app/build.gradle || \
+          test -f android/app/build.gradle.kts
+          echo "Android Gradle files found."
 
       - name: Get Dependencies
         run: flutter pub get
