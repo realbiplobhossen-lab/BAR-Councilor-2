@@ -17,11 +17,19 @@ const purple = Color(0xFF7953F5);
 const blue = Color(0xFF2678F5);
 const orange = Color(0xFFFF851B);
 
-const years = [
-  2012, 2013, 2014, 2015, 2016,
-  2017, 2018, 2019, 2020, 2021,
-  2022, 2023, 2024, 2025, 2026,
+
+const List<int> examYears = [
+  2012,
+  2013,
+  2015,
+  2017,
+  2020,
+  2022,
+  2023,
+  2025,
+  2026,
 ];
+
 
 class MCQ {
   final int id;
