@@ -748,7 +748,7 @@ class _ReadingScreenState extends State<ReadingScreen> {
         backgroundColor: navy2,
         title: const Text('পরীক্ষার সাল নির্বাচন'),
         children: [
-          for (final y in years)
+          for (final y in examYears)
             SimpleDialogOption(
               onPressed: () => Navigator.pop(dialogContext, y),
               child: Text(
@@ -1185,7 +1185,7 @@ class _ExamSetupScreenState extends State<ExamSetupScreen> {
                   color: gold,
                 ),
               ),
-              items: years.map((y) {
+              items: examYears.map((y) {
                 return DropdownMenuItem(
                   value: y,
                   child: Text('$y'),
