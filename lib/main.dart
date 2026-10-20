@@ -102,64 +102,109 @@ class MCQ {
   }
 }
 
+
 class QuestionBank {
-  static final Map<int, List<MCQ>> _cache = {};
+  static const List<String> optionKeys = [
+    'ক',
+    'খ',
+    'গ',
+    'ঘ',
+  ];
 
   static Future<List<MCQ>> load(int year) async {
-    final cached = _cache[year];
-
-    if (cached != null) {
-      return cached;
+    if (!examYears.contains(year)) {
+      throw ArgumentError('Invalid exam year: $year');
     }
 
     final path = 'assets/data/questions_$year.json';
+    final raw = await rootBundle.loadString(path);
+    final decoded = jsonDecode(raw);
 
-    try {
-      final raw = await rootBundle.loadString(path);
-      final decoded = jsonDecode(raw);
-
-      if (decoded is! List) {
-        throw const FormatException(
-          'JSON-এর মূল ডেটা একটি List হতে হবে।',
-        );
-      }
-
-      final questions = <MCQ>[];
-      final ids = <int>{};
-
-      for (final item in decoded) {
-        if (item is! Map) {
-          throw const FormatException(
-            'প্রতিটি প্রশ্ন JSON Object হতে হবে।',
-          );
-        }
-
-        final question = MCQ.fromJson(
-          Map<String, dynamic>.from(item),
-        );
-
-        if (!ids.add(question.id)) {
-          throw FormatException(
-            'একই JSON ফাইলে duplicate question id: ${question.id}',
-          );
-        }
-
-        questions.add(question);
-      }
-
-      // খালি JSON-ও বৈধ; তবে কোনো প্রশ্ন পাওয়া যাবে না।
-      final result = List<MCQ>.unmodifiable(questions);
-      _cache[year] = result;
-      return result;
-    } on FormatException {
-      rethrow;
-    } catch (e) {
-      throw FormatException(
-        '$path ফাইলটি পড়া যায়নি। assets এবং pubspec.yaml যাচাই করুন।',
+    // মূল JSON একটি Object হতে হবে।
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException(
+        'JSON-এর মূল ডেটা একটি Object হতে হবে।',
       );
     }
+
+    // প্রশ্নগুলো questions নামের List-এর মধ্যে আছে।
+    final rawQuestions = decoded['questions'];
+
+    if (rawQuestions is! List) {
+      throw const FormatException(
+        'JSON-এ questions নামে একটি List থাকতে হবে।',
+      );
+    }
+
+    return rawQuestions.map<MCQ>((item) {
+      if (item is! Map) {
+        throw const FormatException(
+          'একটি প্রশ্নের ডেটা সঠিক নয়।',
+        );
+      }
+
+      final question = Map<String, dynamic>.from(item);
+      final rawOptions = question['options'];
+
+      // JSON-এর অপশন Map থেকে চারটি অপশন বের করা।
+      late final List<String> options;
+
+      if (rawOptions is Map) {
+        options = optionKeys.map((key) {
+          final value = rawOptions[key];
+
+          if (value == null) {
+            throw FormatException(
+              'প্রশ্ন ${question['id']}: $key অপশন পাওয়া যায়নি।',
+            );
+          }
+
+          return value.toString();
+        }).toList();
+      } else if (rawOptions is List) {
+        options = rawOptions
+            .map((option) => option.toString())
+            .toList();
+      } else {
+        throw FormatException(
+          'প্রশ্ন ${question['id']}: options সঠিক নয়।',
+        );
+      }
+
+      if (options.length != 4) {
+        throw FormatException(
+          'প্রশ্ন ${question['id']}: ঠিক ৪টি অপশন থাকতে হবে।',
+        );
+      }
+
+      // বাংলা উত্তর ক/খ/গ/ঘ-কে 0/1/2/3-এ রূপান্তর।
+      final rawAnswer = question['answer'];
+      late final int answerIndex;
+
+      if (rawAnswer is int) {
+        answerIndex = rawAnswer;
+      } else {
+        final answerLetter = rawAnswer.toString().trim();
+        answerIndex = optionKeys.indexOf(answerLetter);
+      }
+
+      if (answerIndex < 0 || answerIndex > 3) {
+        throw FormatException(
+          'প্রশ্ন ${question['id']}: সঠিক উত্তর শনাক্ত করা যায়নি।',
+        );
+      }
+
+      // বিদ্যমান MCQ.fromJson()-এর উপযোগী ডেটা তৈরি।
+      question['options'] = options;
+      question['answer'] = answerIndex;
+      question['explanation'] ??= '';
+      question['difficulty'] ??= 'simple';
+
+      return MCQ.fromJson(question);
+    }).toList();
   }
 }
+
 
 class BarPrepApp extends StatelessWidget {
   const BarPrepApp({super.key});
