@@ -37,6 +37,8 @@ class MCQ {
   final List<String> options;
   final int answer;
   final String explanation;
+  final String reference;
+  final String example;
   final String difficulty;
 
   const MCQ({
@@ -45,6 +47,8 @@ class MCQ {
     required this.options,
     required this.answer,
     this.explanation = '',
+    this.reference = '',
+    this.example = '',
     this.difficulty = 'simple',
   });
 
@@ -82,12 +86,17 @@ class MCQ {
       );
     }
 
-    final explanation = json['explanation'] ?? '';
+    final explanation =
+        (json['explanation'] ?? json['ব্যাখ্যা'] ?? '').toString();
+    final reference =
+        (json['reference'] ?? json['রেফারেন্স'] ?? '').toString();
+    final example =
+        (json['example'] ?? json['উদাহরণ'] ?? '').toString();
     final difficulty = json['difficulty'] ?? 'simple';
 
-    if (explanation is! String || difficulty is! String) {
+    if (difficulty is! String) {
       throw const FormatException(
-        'explanation এবং difficulty অবশ্যই String হতে হবে।',
+        'difficulty অবশ্যই String হতে হবে।',
       );
     }
 
@@ -105,6 +114,8 @@ class MCQ {
       options: List<String>.from(rawOptions),
       answer: answer,
       explanation: explanation,
+      reference: reference,
+      example: example,
       difficulty: normalizedDifficulty,
     );
   }
@@ -205,7 +216,11 @@ class QuestionBank {
       // বিদ্যমান MCQ.fromJson()-এর উপযোগী ডেটা তৈরি।
       question['options'] = options;
       question['answer'] = answerIndex;
-      question['explanation'] ??= '';
+
+      // English ও বাংলা—দুই ধরনের JSON key সমর্থন করবে।
+      question['explanation'] ??= question['ব্যাখ্যা'] ?? '';
+      question['reference'] ??= question['রেফারেন্স'] ?? '';
+      question['example'] ??= question['উদাহরণ'] ?? '';
       question['difficulty'] ??= 'simple';
 
       return MCQ.fromJson(question);
@@ -396,7 +411,8 @@ class HomeScreen extends StatelessWidget {
         orange,
         const AdvanceScreen(),
       ),
-      ModeInfo(
+
+            ModeInfo(
         '2027 MCQ Mode',
         'ভবিষ্যৎ প্রস্তুতি',
         Icons.auto_awesome_rounded,
@@ -809,7 +825,7 @@ class _ReadingScreenState extends State<ReadingScreen> {
                                   decoration: BoxDecoration(
                                     color: navy2,
                                     borderRadius:
-                                        BorderRadius.circular(12),
+                                                                            BorderRadius.circular(12),
                                   ),
                                   child: Text(
                                     'সাল: $year',
@@ -962,6 +978,18 @@ class _ReadingScreenState extends State<ReadingScreen> {
                                             const SizedBox(height: 12),
                                             Text(
                                               'ব্যাখ্যা: ${q.explanation}',
+                                            ),
+                                          ],
+                                          if (q.reference.isNotEmpty) ...[
+                                            const SizedBox(height: 10),
+                                            Text(
+                                              'রেফারেন্স: ${q.reference}',
+                                            ),
+                                          ],
+                                          if (q.example.isNotEmpty) ...[
+                                            const SizedBox(height: 10),
+                                            Text(
+                                              'উদাহরণ: ${q.example}',
                                             ),
                                           ],
                                           const SizedBox(height: 20),
@@ -1210,7 +1238,8 @@ class _ExamSetupScreenState extends State<ExamSetupScreen> {
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                        ),
+
+                                                  ),
                       )
                     : const Icon(Icons.play_arrow_rounded),
                 label: Text(
@@ -1562,7 +1591,9 @@ class _ExamScreenState extends State<ExamScreen> {
                 '${answers.containsKey(i) ? String.fromCharCode(65 + answers[i]!) : "দেওয়া হয়নি"}'
                 '\nসঠিক উত্তর: '
                 '${String.fromCharCode(65 + widget.questions[i].answer)}'
-                '${widget.questions[i].explanation.isNotEmpty ? "\nব্যাখ্যা: ${widget.questions[i].explanation}" : ""}',
+                '${widget.questions[i].explanation.isNotEmpty ? "\nব্যাখ্যা: ${widget.questions[i].explanation}" : ""}'
+                '${widget.questions[i].reference.isNotEmpty ? "\nরেফারেন্স: ${widget.questions[i].reference}" : ""}'
+                '${widget.questions[i].example.isNotEmpty ? "\nউদাহরণ: ${widget.questions[i].example}" : ""}',
               ),
               isThreeLine: true,
             ),
@@ -1621,7 +1652,8 @@ Widget _omr(
               color: red,
               fontWeight: FontWeight.bold,
             ),
-          ),
+
+                      ),
         ),
         const Divider(color: red),
         Wrap(
